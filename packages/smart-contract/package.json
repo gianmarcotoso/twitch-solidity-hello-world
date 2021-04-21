@@ -1,0 +1,19 @@
+{
+	"name": "@hello/smart-contract",
+	"version": "0.0.1",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "truffle test",
+		"ganache": "ganache-cli -s hello",
+		"truffle": "truffle",
+		"deploy": "truffle migrate"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"ganache-cli": "^6.12.2",
+		"truffle": "^5.3.2"
+	}
+}
