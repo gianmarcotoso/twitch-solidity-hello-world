@@ -1,65 +1,83 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import { useEffect, useState } from 'react'
+import Web3 from 'web3'
+import HelloWorldContract from '../../smart-contract/build/contracts/HelloWorld.json'
+
+const __CONTRACT_ADDRESS = '0x6fc77Cd198086cBF7c0ed43609310F7bDA62566D'
+
+function useWeb3() {
+	const [web3, setWeb3] = useState()
+
+	useEffect(() => {
+		const provider = Web3.givenProvider
+		const web3 = new Web3(provider)
+
+		global.web3 = web3
+		setWeb3(web3)
+	}, [])
+
+	return web3
+}
 
 export default function Home() {
-  return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+	const web3 = useWeb3()
+	const [accounts, setAccounts] = useState([])
+	const [contract, setContract] = useState(null)
+	const [greeting, setGreeting] = useState('')
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+	useEffect(() => {
+		if (!web3) {
+			return
+		}
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+		const contract = new web3.eth.Contract(
+			HelloWorldContract.abi,
+			__CONTRACT_ADDRESS,
+		)
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+		setContract(contract)
+	}, [web3])
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+	async function handleConnect() {
+		const accounts = await web3.eth.requestAccounts()
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+		setAccounts(accounts)
+	}
 
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+	async function handleHelloWorldContractCall() {
+		if (!contract) {
+			return
+		}
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
-  )
+		const greeting = await contract.methods.sayHello().call()
+		setGreeting(greeting)
+	}
+
+	return (
+		<div className="p-4">
+			<h1 className="font-bold text-3xl text-blue-800">
+				Smart Contract Test
+			</h1>
+
+			{accounts.length === 0 && (
+				<button
+					onClick={handleConnect}
+					className="px-4 py-2 border bg-green-300"
+				>
+					Connect
+				</button>
+			)}
+			{accounts.length > 0 && (
+				<div>
+					<button
+						onClick={handleHelloWorldContractCall}
+						className="px-4 py-2 border bg-purple-300"
+					>
+						Call Hello World
+					</button>
+
+					<h2>{greeting}</h2>
+				</div>
+			)}
+		</div>
+	)
 }
